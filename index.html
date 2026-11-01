@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Favicon Debugging Checklist — why your site icon is missing, blurry, or ignored, and the 30-second fix</title>
+<meta name="description" content="Symptom → cause → fix for the favicon problems developers hit most: icon not showing, stale cache, blurry retina rendering, missing apple-touch-icon, wrong ICO format, and per-stack setup for HTML, Next.js, React, WordPress and Shopify.">
+<style>
+  :root { --ink:#1a2332; --mut:#5a6a7f; --line:#e3e8ef; --acc:#2f6f4f; --bg:#fbfcfd; }
+  * { box-sizing:border-box; }
+  body { margin:0; font:16px/1.65 -apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; color:var(--ink); background:var(--bg); }
+  main { max-width:860px; margin:0 auto; padding:32px 20px 80px; }
+  h1 { font-size:1.9rem; line-height:1.25; margin:.2em 0 .4em; }
+  h2 { font-size:1.25rem; margin:2.2em 0 .6em; padding-bottom:.25em; border-bottom:1px solid var(--line); }
+  p.lede { font-size:1.06rem; color:var(--mut); }
+  table { border-collapse:collapse; width:100%; margin:1em 0 1.4em; font-size:.95rem; background:#fff; }
+  th,td { border:1px solid var(--line); padding:.55em .7em; text-align:left; vertical-align:top; }
+  th { background:#f2f5f8; font-weight:600; }
+  code { background:#eef2f6; padding:.12em .35em; border-radius:4px; font-size:.88em; font-family:ui-monospace,SFMono-Regular,Consolas,monospace; }
+  a { color:var(--acc); }
+  .tag { display:inline-block; font-size:.72rem; font-weight:600; letter-spacing:.04em; color:#fff; background:var(--acc); border-radius:4px; padding:.15em .5em; margin-right:.5em; vertical-align:1px; }
+  ul.checks { list-style:none; padding-left:0; margin:.8em 0 1.2em; }
+  ul.checks li { padding:.45em 0 .45em 1.6em; position:relative; border-bottom:1px dashed var(--line); }
+  ul.checks li:before { content:"☐"; position:absolute; left:.1em; color:var(--acc); font-size:1.05em; }
+  .note { background:#f4f9f6; border:1px solid #d8e8de; border-radius:8px; padding:.9em 1.1em; margin:1.2em 0; font-size:.95rem; }
+  footer { margin-top:3em; padding-top:1.2em; border-top:2px solid var(--line); font-size:.92rem; color:var(--mut); }
+</style>
+</head>
+<body>
+<main>
+<h1>The Favicon Debugging Checklist</h1>
+<p class="lede">Your site icon is missing, blurry, or stuck on some random letter — here's the symptom → cause → fix for every favicon failure that shows up in real projects. Each linked tool runs <strong>100% in your browser</strong>; no account, nothing uploaded.</p>
+
+<h2>1 · "My favicon isn't showing up at all"</h2>
+<p>Ninety percent of the time it's one of six boring causes, not a browser bug. Work through the list before touching code:</p>
+<ul class="checks">
+  <li><span class="tag">CHECK</span> The file is named <code>favicon.ico</code> but lives anywhere but the site root — browsers only look at <code>/favicon.ico</code> by default → <a href="https://favicon.one/blog/favicon-not-showing/">all 10 causes, ranked by frequency</a></li>
+  <li><span class="tag">CHECK</span> You deployed a new icon but every device shows the old one → that's cache, not your code. Hard-reload, then bust with <code>?v=2</code> on the href</li>
+  <li><span class="tag">CHECK</span> The <code>&lt;link rel="icon"&gt;</code> tag points to a 404 — open the URL directly in a tab and see what actually comes back</li>
+  <li><span class="tag">CHECK</span> You're testing on localhost and expecting the production icon → local dev servers and browser profiles cache aggressively</li>
+  <li><span class="tag">CHECK</span> Unsure what your site is <em>actually</em> serving right now? Run it through the <a href="https://favicon.one/favicon-checker/">Favicon Checker</a> — it fetches the live page, reads the declared icons, and reports what each one resolves to</li>
+  <li><span class="tag">CHECK</span> Not sure what a favicon technically <em>is</em> (ico vs png vs manifest)? Start with <a href="https://favicon.one/what-is-a-favicon/">what a favicon actually is</a></li>
+</ul>
+
+<h2>2 · "It renders, but it's blurry / mushy on retina screens"</h2>
+<p>A single 16×16 icon upscaled by the browser will always look like wet cardboard. You need one file per render size:</p>
+<ul class="checks">
+  <li><span class="tag">CHECK</span> Ship the full ladder, not one file: <a href="https://favicon.one/size/16x16/">16×16</a> (browser tab), <a href="https://favicon.one/size/32x32/">32×32</a> (taskbar, retina tabs), <a href="https://favicon.one/size/192x192/">192×192</a> (Android home screen), <a href="https://favicon.one/size/512x512/">512×512</a> (PWA splash &amp; store listings)</li>
+  <li><span class="tag">CHECK</span> Exporting from a small source image and upscaling? That's the blur. Start from something ≥512×512 or vector → <a href="https://favicon.one/blog/favicon-blurry/">why favicons go blurry</a></li>
+  <li><span class="tag">CHECK</span> Not sure which sizes the major platforms actually read in 2026? <a href="https://favicon.one/blog/favicon-size-guide/">The favicon size guide</a> maps every size to where it's used</li>
+  <li><span class="tag">CHECK</span> A 32×32 icon that was scaled down from 16×16 artwork will alias badly — design at large size, derive downward</li>
+</ul>
+
+<h2>3 · "iOS ignores my favicon"</h2>
+<p>Correct — it does, on purpose. Safari on iOS/iPadOS never reads <code>favicon.ico</code>; it wants <code>apple-touch-icon</code>:</p>
+<ul class="checks">
+  <li><span class="tag">CHECK</span> Missing <code>&lt;link rel="apple-touch-icon"&gt;</code> at 180×180 → add it; the <a href="https://favicon.one/blog/apple-touch-icon-guide/">apple-touch-icon guide</a> covers sizing, rounding, and the black-background pitfall</li>
+  <li><span class="tag">CHECK</span> Icon has transparency → iOS composites it onto black. Export on your brand background</li>
+  <li><span class="tag">CHECK</span> Safari on macOS also supports a <a href="https://favicon.one/blog/dark-mode-favicon-safari/">mask-icon / dark-mode variant</a> — worth shipping if your audience is Apple-heavy</li>
+</ul>
+
+<h2>4 · Adding a favicon to each stack (the tag placement differs)</h2>
+<table>
+  <tr><th>Stack</th><th>What actually goes where</th></tr>
+  <tr><td>Plain HTML</td><td><a href="https://favicon.one/blog/add-favicon-html/">Favicon in HTML</a> — the <code>&lt;link&gt;</code> tags, where they belong, and which ones are optional in 2026</td></tr>
+  <tr><td>Next.js (App Router)</td><td><a href="https://favicon.one/blog/add-favicon-nextjs/">Favicon in Next.js</a> — <code>app/icon</code> conventions, metadata API, and static-export gotchas</td></tr>
+  <tr><td>React / CRA / Vite</td><td><a href="https://favicon.one/blog/add-favicon-react/">Favicon in React</a> — public folder vs imports, and why the dev server shows a different icon</td></tr>
+  <tr><td>WordPress</td><td><a href="https://favicon.one/blog/favicon-wordpress/">Favicon in WordPress</a> — Customizer's Site Icon vs theme-level tags, and what happens to your SEO snapshot</td></tr>
+  <tr><td>Shopify</td><td><a href="https://favicon.one/blog/favicon-shopify/">Favicon in Shopify</a> — where the theme setting hides and its 32×32 limitation</td></tr>
+</table>
+
+<h2>5 · "I have a logo, but it's the wrong format"</h2>
+<p>Browsers want ICO/PNG at specific sizes; your designer gave you a JPG, or a PNG that's 3000×3000. Convert, don't resize by hand:</p>
+<table>
+  <tr><th>You have</th><th>You need</th><th>Convert in-browser</th></tr>
+  <tr><td><code>.png</code></td><td>multi-size <code>.ico</code></td><td><a href="https://favicon.one/convert/png-to-ico/">PNG → ICO</a></td></tr>
+  <tr><td><code>.svg</code></td><td><code>.ico</code></td><td><a href="https://favicon.one/convert/svg-to-ico/">SVG → ICO</a></td></tr>
+  <tr><td><code>.jpg</code></td><td>favicon set</td><td><a href="https://favicon.one/convert/jpg-to-favicon/">JPG → favicon</a></td></tr>
+</table>
+<ul class="checks">
+  <li><span class="tag">CHECK</span> Full walkthrough with the gotchas (padding, background, which sizes land in the .ico): <a href="https://favicon.one/blog/convert-png-to-favicon/">converting a PNG to a favicon properly</a></li>
+  <li><span class="tag">CHECK</span> Deciding between shipping SVG or PNG icons? <a href="https://favicon.one/blog/svg-vs-png-favicon/">SVG vs PNG favicons</a> — support, file size, and the Safari caveat</li>
+</ul>
+
+<h2>6 · "There is no logo — I need an icon from scratch"</h2>
+<ul class="checks">
+  <li><span class="tag">CHECK</span> Type your brand name, pick a font/colors, get a clean lettermark → <a href="https://favicon.one/text-to-favicon/">text-to-favicon generator</a></li>
+  <li><span class="tag">CHECK</span> Want something playful and instant? Pick an emoji and export the full size set → <a href="https://favicon.one/emoji-to-favicon/">emoji favicon generator</a></li>
+  <li><span class="tag">CHECK</span> Already have an SVG idea? Import and export every platform size → <a href="https://favicon.one/svg-favicon-generator/">SVG favicon generator</a></li>
+  <li><span class="tag">CHECK</span> Everything above generates the complete set in one pass at <a href="https://favicon.one/">favicon.one</a> — free, no signup, all local</li>
+</ul>
+
+<h2>7 · Bonus: one icon, both themes</h2>
+<p>Dark-mode browser UIs can render a dark-on-dark icon into invisibility. Media-query your SVG icon so it adapts:</p>
+<ul class="checks">
+  <li><span class="tag">CHECK</span> <a href="https://favicon.one/blog/favicon-dark-mode/">Dark-mode favicons</a> — the <code>prefers-color-scheme</code> SVG trick and its browser support matrix</li>
+  <li><span class="tag">CHECK</span> Safari-specific masking behavior: <a href="https://favicon.one/blog/dark-mode-favicon-safari/">dark mode favicons in Safari</a></li>
+</ul>
+
+<h2>8 · "I need the icon from a site I don't own"</h2>
+<ul class="checks">
+  <li><span class="tag">CHECK</span> Pull every declared icon (ico, png, apple-touch, manifest) from any URL in one shot → <a href="https://favicon.one/favicon-downloader/">Favicon Downloader</a>. Handiest for competitive audits and "how did they set that up?" moments</li>
+</ul>
+
+<div class="note">One habit that prevents most of the above: treat favicon files as <strong>build output, not design artifacts</strong>. Keep one master ≥512×512 source (or SVG), and regenerate the whole size set on every brand change. Hand-maintained icon folders are where stale sizes and 404s come from.</div>
+
+<footer>
+  <p>Every tool linked above lives at <a href="https://favicon.one/">favicon.one</a> — a free favicon toolkit (generator from text/emoji/SVG/image, ICO &amp; size converters, checker, downloader). All processing happens in your browser: no uploads, no account, no cookies.</p>
+</footer>
+</main>
+</body>
+</html>
